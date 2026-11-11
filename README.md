@@ -31,7 +31,7 @@ chmod +x setup-manjaro.sh 1_clone-code.sh
 
 ### What `setup-manjaro.sh` Configures:
 1. Installs `base-devel`, `openocd`, `stlink`, `avr-gcc`, `avr-libc`, `avrdude`, `figlet`, `cowsay`, `python`, `python-numpy`, and `python-scipy`.
-2. Configures the ARM cross-compiler in `/usr/local/arm-4.8.3/` and `/usr/local/arm/`, AVR symlink in `/usr/local/CrossPack-AVR`, and OpenOCD scripts in `/opt/local/share/openocd/scripts`.
+2. Configures the ARM cross-compiler in `/usr/local/arm-4.8.3/`, `/usr/local/arm-4.9/` (required by *Beads*), and `/usr/local/arm/`, AVR symlink in `/usr/local/CrossPack-AVR`, and OpenOCD scripts in `/opt/local/share/openocd/scripts`.
 3. Installs USB `udev` rules (`/etc/udev/rules.d/99-mutable-dev.rules`) for ST-Link V1/V2/V2-1/V3, Olimex ARM-USB-OCD-H / TINY-H, Atmel AVRISP mkII, and FTDI serial adapters.
 4. Writes `/etc/profile.d/mutable-dev.sh` and appends it to `~/.bashrc`.
 5. Clones (or updates) `https://github.com/racoonhead/eurorack.git` into `../eurorack`, initializes all submodules (`stmlib`, `stm_audio_bootloader`, `avrlib`, `avrlibx`, `avr_audio_bootloader`), and checks out the latest `stm_audio_bootloader` with STM32H7 support.

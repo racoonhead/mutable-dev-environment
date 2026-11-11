@@ -125,6 +125,7 @@ elif [ "${ARCH}" = "aarch64" ] || [ "${ARCH}" = "arm64" ]; then
 fi
 
 sudo ln -sfn /usr/local/arm-4.8.3 /usr/local/arm
+sudo ln -sfn /usr/local/arm-4.8.3 /usr/local/arm-4.9
 sudo ln -sfn /usr /usr/local/CrossPack-AVR
 sudo chmod -R a+rX /usr/local/arm-4.8.3
 

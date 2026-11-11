@@ -55,7 +55,22 @@ fi
 # Relax -Werror in stmlib/makefile.inc for modern GCC compatibility
 if [ -f "${DEV_ENV}/stmlib/makefile.inc" ]; then
     sed -i 's/-Wall -Werror/-Wall -Wno-error -fcommon/g' "${DEV_ENV}/stmlib/makefile.inc" 2>/dev/null || true
+
+    # Modern newlib (arm-none-eabi-gcc 12+): libm needs __errno from libc, so the
+    # libraries must be listed AFTER the objects inside a linker group.
+    if ! grep -q 'MUTABLE_LDLIBS' "${DEV_ENV}/stmlib/makefile.inc"; then
+        sed -i 's|-o \$(TARGET_ELF) \$(OBJS)|-o $(TARGET_ELF) $(OBJS) $(MUTABLE_LDLIBS)|' "${DEV_ENV}/stmlib/makefile.inc"
+        sed -i 's|^LDFLAGS = |MUTABLE_LDLIBS = -Wl,--start-group -lc -lm -lnosys -Wl,--end-group\nLDFLAGS = |' "${DEV_ENV}/stmlib/makefile.inc"
+    fi
 fi
+
+# Make stmlib/tools/resources_compiler.py compatible with Python 3
+if [ -f "${DEV_ENV}/stmlib/tools/resources_compiler.py" ]; then
+    sed -i 's/\bxrange\b/range/g; s/\bfile(/open(/g; s/import cStringIO/import io as cStringIO/g' "${DEV_ENV}/stmlib/tools/resources_compiler.py" 2>/dev/null || true
+fi
+
+# Touch pre-generated resources.cc / resources.h so make does not needlessly regenerate them after git checkout
+find "${DEV_ENV}" -maxdepth 2 \( -name "resources.cc" -o -name "resources.h" \) -exec touch {} + 2>/dev/null || true
 
 # Automatically navigate to the code directory on login
 if [ -f "${HOME}/.bashrc" ] && ! grep -q "cd ${DEV_ENV}" "${HOME}/.bashrc"; then
