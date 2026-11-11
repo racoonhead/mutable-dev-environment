@@ -1,105 +1,107 @@
-# Vagrant environment for Mutable Instruments modules hacking
+# Mutable Instruments Development Environment (Modernized)
 
-This configuration file and this shellscript create a Linux (ubuntu) virtual machine configured with all the right tools for compiling and installing the firmware of Mutable Instruments' modules.
+Zmodernizované vývojové prostředí pro kompilaci a nahrávání firmwaru modulů **Mutable Instruments** (Clouds, Elements, Plaits, Rings, Braids, Marbles, Stages a AVR moduly jako Grids/Peaks/Branches).
 
-## Kudos and inspiration
+Podporuje **x86_64** (Intel/AMD) i **ARM CPU / aarch64** (Manjaro ARM, Apple Silicon M1/M2/M3/M4, Raspberry Pi 4/5).
 
-* Adafruit's [ARM Toolchain for Vagrant](https://github.com/adafruit/ARM-toolchain-vagrant)
-* Novation's [LaunchPad pro](https://github.com/dvhdr/launchpad-pro)
+---
 
-## Requirements
+## Běh na ARM CPU (Manjaro ARM / Apple Silicon / Raspberry Pi)
 
-* [VirtualBox 5.x](https://www.virtualbox.org/wiki/Downloads)
-* [VirtualBox Extension Pack](https://www.virtualbox.org/wiki/Downloads)
-* [Vagrant](https://www.vagrantup.com/downloads.html)
+Při běhu na procesorech ARM (architektura **aarch64**) nastává specifický problém:
+Původní kompilátor `gcc-arm-none-eabi-4_8-2013q4` z Launchpadu byl zkompilován pro 32-bitový Intel x86. Na ARM procesoru nelze tento x86 binární soubor přímo spustit (`Exec format error`).
 
-The Extension pack consists of a file with the `vbox-extpack` extension.  On windows, double click on it.  On OS X or Linux, the file needs to be installed from the command line with the command:
+### Jak je to v novém prostředí vyřešeno:
+1. **Skript `setup-manjaro.sh` automaticky detekuje architekturu (`uname -m`):**
+   - Na **ARM64 (aarch64)** nainstaluje nativní balíček `arm-none-eabi-gcc` z repozitářů Manjaro ARM (který běží plnou nativní rychlostí vašeho procesoru).
+   - Vytvoří mapovací symlinky do `/usr/local/arm-4.8.3/bin/`, takže původní makefily Mutable Instruments fungují bez jakékoliv ruční změny.
+   - Automaticky přidá kompilátorové flagy `-Wno-error -fcommon`, aby novější GCC nezastavoval kompilaci na starých varováních.
+2. **Multi-arch Docker:**
+   - Dockerfile podporuje jak `linux/amd64`, tak `linux/arm64`.
+   - Na Apple Silicon nebo Manjaro ARM se automaticky sestaví nativní ARM64 kontejner.
+   - Pokud na Apple Silicon trváte na přesné binárce GCC 4.8.3, můžete kontejner spustit s emulací přes Rosettu: `docker compose run --platform linux/amd64 mutable-builder`.
 
-    VBoxManage extpack install <filename>
+---
 
-Finally if you are running a Linux operating system you will want to add your user to the `vboxusers` group so that the virtual machine can access your USB devices.  Run the following command:
+## Varianta A: Nativní instalace v Manjaro ARM (nebo x86)
 
-    sudo usermod -a -G vboxusers $USER
+Ať už běžíte na fyzickém Manjaro ARM (např. Raspberry Pi 4/5, Pinebook) nebo ve virtuálním stroji na Apple Silicon (přes **UTM**, **Parallels** či **VMware Fusion**):
 
-Then **log out and log back in** to make sure the group change takes effect.
+1. Otevřete terminál ve složce `mutable-dev-environment`:
+   ```bash
+   chmod +x setup-manjaro.sh
+   ./setup-manjaro.sh
+   ```
 
-## Usage
+Skript provede:
+- Detekci ARM vs x86_64.
+- Instalaci nativních nástrojů (`arm-none-eabi-gcc`, `openocd`, `stlink`, `avr-gcc`).
+- Nastavení symlinků pro Mutable makefily (`/usr/local/arm-4.8.3/` a `/usr/local/CrossPack-AVR`).
+- Nastavení udev pravidel pro programátory (ST-Link V2, V3, Olimex, AVR ISP).
+- Aktivaci profilu v `/etc/profile.d/mutable-dev.sh`.
 
-First, clone this repository:
+---
 
-	git clone https://github.com/pichenettes/mutable-dev-environment.git
+## Varianta B: Docker / Kontejnery (Univerzální pro ARM i x86)
 
-or download: 
+Pokud nechcete instalovat kompilátory přímo do systému:
 
-	https://github.com/pichenettes/mutable-dev-environment/archive/master.zip
+```bash
+chmod +x docker-build.sh
 
-To start the VM, open a terminal in the `mutable-dev-environment` directory with the Vagrantfile and run:
+# Kompilace libovolného modulu:
+./docker-build.sh clouds
+./docker-build.sh plaits
+./docker-build.sh elements
 
-    vagrant up
+# Kompilace hex / wav souboru:
+./docker-build.sh clouds hex
+./docker-build.sh clouds wav
 
-The first time the VM is started, all tools will be downloaded, and the latest version of the code will be grabbed from github.  The process takes about 15 minutes, depending on the speed of your internet connection or computer.
+# Otevření interaktivního shellu:
+./docker-build.sh bash
+```
 
-Then, you can log onto the virtual machine by running:
+Na Windows s ARM procesorem (např. Snapdragon X Elite / Copilot+ PC):
+```cmd
+docker-build.bat clouds
+```
 
-    vagrant ssh
+---
 
-Once in the virtual machine, you can try, for example, to compile Clouds' bootloader and code:
+## Varianta C: Vagrant / VirtualBox
 
-    make -f clouds/bootloader/makefile hex
-    make -f clouds/makefile
+Pro klasické x86_64 počítače s VirtualBoxem:
+```bash
+vagrant up
+vagrant ssh
+```
+*(Poznámka: VirtualBox pro ARM na Apple Silicon zatím nemá plnou podporu pro virtualizaci x86 hostů. Pokud jste na Macu s Apple Silicon, doporučujeme použít Variantu A s UTM/Parallels nebo Variantu B s Dockerem).*
 
-To write the firmware to the module with an Olimex ARM-USB-OCD-H JTAG adapter, use:
+---
 
-    make -f clouds/makefile upload
+## Jak kompilovat a nahrávat firmware
 
-Using other programmers is of course possible, please see [Customization](#customization).
+Vždy kompilujte z kořenové složky `eurorack`:
 
-Or you can generate a .wav file for the built-in audio updater:
+### 1. Kompilace firmwaru:
+```bash
+make -f clouds/makefile
+make -f elements/makefile
+make -f plaits/makefile
+```
 
-    make -f clouds/makefile wav
+### 2. Generování bootloader WAV souboru (pro nahrání přes audio kabel):
+```bash
+make -f clouds/makefile wav
+```
+Výsledný soubor naleznete v `build/clouds/clouds.wav`.
 
-The firmware update file will be put in `build/clouds/clouds.wav`.
+### 3. Nahrání přes ST-Link / Olimex:
+```bash
+# Pro ST-Link V2 / V3:
+PGM_INTERFACE=stlink-v2 make -f clouds/makefile upload
 
-Once you're done with your hacking session, you can leave the VM terminal with:
-
-    exit
-
-The virtual machine continues running and can be reaccessed with `vagrant ssh`. It can also be suspended with `vagrant suspend`, halted with `vagrant halt`, and completely destroyed with `vagrant destroy`.  Note that with this last command, you might lose any files you have created inside the VM's disk image!
-
-## Moving files between the VM and the host
-
-By default, the working directory (`eurorack-modules`) is installed in the `/vagrant` directory, which is shared between the VM and the host.  You can thus use any text editor on the host to modify the files.  Note that any file can be transferred between the VM and the host by being copied in this location.
-
-If you prefer working in a more self-contained environment and leave your host directory clean, you can comment the line `CODE_DIRECTORY=/vagrant` and uncomment the line `CODE_DIRECTORY=/home/vagrant` before setting up the VM.  The code will not be installed in the shared directory, and will be accessible only from within the VM.
-
-## USB issues
-
-To pass through USB devices from your real machine to the virtual machine, consult the [VirtualBox USB documentation](https://www.virtualbox.org/manual/ch03.html#idp96037808).
-
-## <a name=#customization></a>Customization
-
-### Using a different programmer
-To use a programmer other than the default (AVR ISP mkII, ARM-USB-OCD-H) it is no longer necessary to edit the makefiles. Instead, the programmer can be set in the shell for the current session, e.g.
-
-	export PGM_INTERFACE=stlink-v2
-	export PGM_INTERFACE_TYPE=hla
-
-for ARM projects using a JTAG adapter. Similarly for AVR projects, you can use
-
-	export PROGRAMMER=stk500
-	export PROGRAMMER_PORT=/dev/tty.usbserial-xxxxxxxx
-
-Any further calls to `make` will then automatically use these settings. To make them permanent, add the exports to the end of `~/.bashrc`.
-
-See [stmlib/makefile.inc](https://github.com/pichenettes/stmlib/blob/master/makefile.inc#L29) and [avrlib/makefile.mk](https://github.com/pichenettes/avril/blob/master/makefile.mk#L16) for more options that can be customized.
-
-Another way (e.g. to test if settings are correct) is to just specify the value in the call to `make`:
-
-	PGM_INTERFACE=ftdi/olimex-arm-usb-tiny-h make -f braids/makefile upload
-
-### Custom repository URL
-If you want to build code from your own github fork, you can specify the repository to clone when you create the VM via the `USER_GITHUB_URL` environment variable, e.g.
-
-	USER_GITHUB_URL=https://github.com/<username>/eurorack.git vagrant up
-
-The Mutable Instruments' repository is automatically added as the git remote `pichenettes`.
+# Pro Olimex:
+PGM_INTERFACE=ftdi/olimex-arm-usb-tiny-h make -f clouds/makefile upload
+```

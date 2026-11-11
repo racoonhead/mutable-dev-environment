@@ -1,0 +1,19 @@
+services:
+  mutable-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mutable-dev:latest
+    container_name: mutable-builder
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace/eurorack
+    # On Linux/Manjaro, grant USB access to flash via ST-Link / Olimex
+    privileged: true
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    environment:
+      - PYTHONPATH=.:$PYTHONPATH
+    stdin_open: true
+    tty: true
+
