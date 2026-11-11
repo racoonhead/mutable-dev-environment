@@ -50,6 +50,10 @@ Vagrant.configure(2) do |config|
     config.vm.provision :shell, path: "0_install-toolchain-ubuntu.sh"
   end
 
+  # Clone or update https://github.com/racoonhead/eurorack.git
+  repo_url = ENV['USER_GITHUB_URL'] || "https://github.com/racoonhead/eurorack.git"
+  config.vm.provision :shell, path: "1_clone-code.sh", args: repo_url, privileged: false
+
   # After login, automatically navigate to workspace if present
   config.vm.provision :shell, inline: <<-SHELL
     if [ -d "/vagrant/workspace/eurorack" ]; then

@@ -7,6 +7,11 @@ rem   docker-build.bat bash
 
 cd /d "%~dp0"
 
+if not exist "..\eurorack\.git" (
+    echo Cloning https://github.com/racoonhead/eurorack.git...
+    git clone --recurse-submodules https://github.com/racoonhead/eurorack.git ..\eurorack
+)
+
 docker image inspect mutable-dev:latest >nul 2>&1
 if errorlevel 1 (
     echo Building Mutable Instruments docker image...

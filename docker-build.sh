@@ -10,6 +10,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$DIR"
 
+if [ ! -d "../eurorack/.git" ]; then
+    echo "Cloning https://github.com/racoonhead/eurorack.git..."
+    bash "./1_clone-code.sh" "https://github.com/racoonhead/eurorack.git"
+fi
+
 if [ ! "$(docker images -q mutable-dev:latest 2> /dev/null)" ]; then
     echo "Building Mutable Instruments docker image..."
     docker compose build

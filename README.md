@@ -39,6 +39,7 @@ Skript provede:
 - Nastavení symlinků pro Mutable makefily (`/usr/local/arm-4.8.3/` a `/usr/local/CrossPack-AVR`).
 - Nastavení udev pravidel pro programátory (ST-Link V2, V3, Olimex, AVR ISP).
 - Aktivaci profilu v `/etc/profile.d/mutable-dev.sh`.
+- **Automatické naklonování (nebo aktualizaci) repozitáře `https://github.com/racoonhead/eurorack.git`** včetně všech submodulů (`stmlib`, `stm_audio_bootloader` s podporou pro STM32H7) do vedlejší složky `../eurorack`.
 
 ---
 

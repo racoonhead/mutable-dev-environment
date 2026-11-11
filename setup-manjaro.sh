@@ -226,6 +226,15 @@ if [ -d "/home/vagrant" ] && [ -f "/home/vagrant/.bashrc" ]; then
     fi
 fi
 
+# ------------------------------------------------------------------------------
+# 6. Clone or update code from https://github.com/racoonhead/eurorack.git
+# ------------------------------------------------------------------------------
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if [ -f "${SCRIPT_DIR}/1_clone-code.sh" ]; then
+    echo "==> [6/6] Syncing source code repository (https://github.com/racoonhead/eurorack.git)..."
+    bash "${SCRIPT_DIR}/1_clone-code.sh" "${USER_GITHUB_URL:-https://github.com/racoonhead/eurorack.git}"
+fi
+
 echo "======================================================================"
 echo " Verification:"
 /usr/local/arm-4.8.3/bin/arm-none-eabi-gcc --version | head -n 1 || echo "ARM GCC: ERROR"
