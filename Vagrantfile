@@ -47,7 +47,7 @@ Vagrant.configure(2) do |config|
   if BOX_NAME.include?("arch") || BOX_NAME.include?("manjaro")
     config.vm.provision :shell, path: "setup-manjaro.sh"
   else
-    config.vm.provision :shell, path: "0_install-toolchain-ubuntu.sh"
+    config.vm.provision :shell, path: "0_install-toolchain.sh"
   end
 
   # Clone or update https://github.com/racoonhead/eurorack.git
