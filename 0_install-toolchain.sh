@@ -70,21 +70,10 @@ if [ "${ARCH}" = "x86_64" ]; then
     fi
 else
     sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi libnewlib-arm-none-eabi
+    sudo rm -rf /usr/local/arm-4.8.3
     sudo mkdir -p /usr/local/arm-4.8.3/bin
 
-    sudo tee /usr/local/arm-4.8.3/bin/arm-none-eabi-gcc > /dev/null << 'EOF'
-#!/usr/bin/env bash
-exec /usr/bin/arm-none-eabi-gcc "$@" -Wno-error -fcommon
-EOF
-
-    sudo tee /usr/local/arm-4.8.3/bin/arm-none-eabi-g++ > /dev/null << 'EOF'
-#!/usr/bin/env bash
-exec /usr/bin/arm-none-eabi-g++ "$@" -Wno-error -fcommon
-EOF
-
-    sudo chmod 755 /usr/local/arm-4.8.3/bin/arm-none-eabi-gcc /usr/local/arm-4.8.3/bin/arm-none-eabi-g++
-
-    for tool in as ld objcopy objdump size nm ar ranlib gdb strip readelf; do
+    for tool in gcc g++ as ld objcopy objdump size nm ar ranlib gdb strip readelf; do
         if [ -f "/usr/bin/arm-none-eabi-${tool}" ]; then
             sudo ln -sf "/usr/bin/arm-none-eabi-${tool}" "/usr/local/arm-4.8.3/bin/arm-none-eabi-${tool}"
         fi

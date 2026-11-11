@@ -54,7 +54,7 @@ fi
 
 # Relax -Werror in stmlib/makefile.inc for modern GCC compatibility
 if [ -f "${DEV_ENV}/stmlib/makefile.inc" ]; then
-    sed -i 's/-Wall -Werror/-Wall -Wno-error/g' "${DEV_ENV}/stmlib/makefile.inc" 2>/dev/null || true
+    sed -i 's/-Wall -Werror/-Wall -Wno-error -fcommon/g' "${DEV_ENV}/stmlib/makefile.inc" 2>/dev/null || true
 fi
 
 # Automatically navigate to the code directory on login
